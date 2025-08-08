@@ -1,0 +1,593 @@
+-- Fake Loading GUI Script
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local GuiService = game:GetService("GuiService")
+local TweenService = game:GetService("TweenService")
+
+-- Executor tespit fonksiyonu
+local function GetExecutorInfo()
+    -- Bilinen executor işaretleri
+    local executorSignatures = {
+        ["Synapse"] = {check = function() return syn and true or false end, version = function() return tostring(syn and syn.version or "Unknown") end},
+        ["ScriptWare"] = {check = function() return SW_LOADED and true or false end},
+        ["Krnl"] = {check = function() return krnl and true or false end, version = function() return tostring(krnl and krnl.version or "Unknown") end},
+        ["Fluxus"] = {check = function() return fluxus and true or false end, version = function() return tostring(fluxus and fluxus.version or "Unknown") end},
+        ["Comet"] = {check = function() return comet and true or false end},
+        ["Electron"] = {check = function() return getexecutorname and true or false end, name = function() return tostring(getexecutorname and getexecutorname() or "Unknown") end},
+        ["JJSploit"] = {check = function() return jjsploit and true or false end}
+    }
+
+    for name, data in pairs(executorSignatures) do
+        if data.check() then
+            local version = data.version and data.version() or "Unknown"
+            local executorName = data.name and data.name() or name
+            return executorName..(version ~= "Unknown" and " v"..version or "")
+        end
+    end
+
+    -- Genel kontrol
+    if getexecutorname then
+        return tostring(getexecutorname() or "Unknown Executor")
+    end
+
+    return "Unknown Executor"
+end
+
+local function CreateFakeLoadingGui()
+    -- Ana GUI'yi oluştur
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "FakeLoadingGui"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    -- Ana frame (arka plan) - Yatay dikdörtgen
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Size = UDim2.new(0, 500, 0, 250)
+    MainFrame.Position = UDim2.new(0.5, -250, 0.5, -125)
+    MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    MainFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+    MainFrame.BackgroundTransparency = 0.5
+    MainFrame.BorderSizePixel = 0
+    MainFrame.ClipsDescendants = true
+    
+    -- Yumuşak oval kenarlar
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 15)
+    UICorner.Parent = MainFrame
+    
+    MainFrame.Parent = ScreenGui
+    
+    -- Başlık çubuğu (üst kısım)
+    local TitleBar = Instance.new("Frame")
+    TitleBar.Name = "TitleBar"
+    TitleBar.Size = UDim2.new(1, 0, 0, 30)
+    TitleBar.Position = UDim2.new(0, 0, 0, 0)
+    TitleBar.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+    TitleBar.BorderSizePixel = 0
+    TitleBar.ZIndex = 2
+    TitleBar.Parent = MainFrame
+    
+-- Taşıma işlevselliği (orijinal TitleBar yerine MainFrame kullanarak)
+local UserInputService = game:GetService("UserInputService")
+
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+MainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+    
+    -- Başlık yazısı
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Name = "TitleLabel"
+    TitleLabel.Size = UDim2.new(0, 200, 1, 0)
+    TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Text = "CHAOS TEAM"
+    TitleLabel.TextColor3 = Color3.new(1, 1, 1)
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.TextSize = 16
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.ZIndex = 3
+    TitleLabel.Parent = TitleBar
+    
+    -- Kontrol butonları (sağ üst köşe)
+    local Controls = Instance.new("Frame")
+    Controls.Name = "Controls"
+    Controls.Size = UDim2.new(0, 65, 0, 30)
+    Controls.Position = UDim2.new(1, -70, 0, 0)
+    Controls.BackgroundTransparency = 1
+    Controls.ZIndex = 3
+    Controls.Parent = TitleBar
+    
+    -- Kapatma butonu (beyaz)
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Name = "CloseButton"
+    CloseButton.Size = UDim2.new(0, 30, 0, 30)
+    CloseButton.Position = UDim2.new(1, -30, 0, 0)
+    CloseButton.BackgroundColor3 = Color3.new(1, 1, 1)
+    CloseButton.TextColor3 = Color3.new(0, 0, 0)
+    CloseButton.Text = "×"
+    CloseButton.Font = Enum.Font.GothamBold
+    CloseButton.TextSize = 20
+    CloseButton.ZIndex = 4
+    CloseButton.Parent = Controls
+    
+    local CloseCorner = Instance.new("UICorner")
+    CloseCorner.CornerRadius = UDim.new(1, 0)
+    CloseCorner.Parent = CloseButton
+    
+    -- Açma/Kapama butonu (beyaz)
+    local ToggleButton = Instance.new("TextButton")
+    ToggleButton.Name = "ToggleButton"
+    ToggleButton.Size = UDim2.new(0, 30, 0, 30)
+    ToggleButton.Position = UDim2.new(0, 0, 0, 0)
+    ToggleButton.BackgroundColor3 = Color3.new(1, 1, 1)
+    ToggleButton.TextColor3 = Color3.new(0, 0, 0)
+    ToggleButton.Text = "−"
+    ToggleButton.Font = Enum.Font.GothamBold
+    ToggleButton.TextSize = 20
+    ToggleButton.ZIndex = 4
+    ToggleButton.Parent = Controls
+    
+    local ToggleCorner = Instance.new("UICorner")
+    ToggleCorner.CornerRadius = UDim.new(1, 0)
+    ToggleCorner.Parent = ToggleButton
+    
+    -- Üst kısım ayırıcı çizgi (başlık çubuğunun hemen altında)
+    local TopDivider = Instance.new("Frame")
+    TopDivider.Name = "TopDivider"
+    TopDivider.Size = UDim2.new(1, -40, 0, 1)
+    TopDivider.Position = UDim2.new(0, 20, 0, 110)
+    TopDivider.BackgroundColor3 = Color3.new(1, 1, 1)
+    TopDivider.BorderSizePixel = 0
+    TopDivider.Parent = MainFrame
+    
+    -- Alt kısım ayırıcı çizgi
+    local BottomDivider = Instance.new("Frame")
+    BottomDivider.Name = "BottomDivider"
+    BottomDivider.Size = UDim2.new(1, -40, 0, 1)
+    BottomDivider.Position = UDim2.new(0, 20, 1, -50)
+    BottomDivider.BackgroundColor3 = Color3.new(1, 1, 1)
+    BottomDivider.BorderSizePixel = 0
+    BottomDivider.Parent = MainFrame
+    
+    -- Kullanıcı bilgileri bölümü
+    local UserFrame = Instance.new("Frame")
+    UserFrame.Name = "UserFrame"
+    UserFrame.Size = UDim2.new(1, -40, 0, 70)
+    UserFrame.Position = UDim2.new(0, 20, 0, 35)
+    UserFrame.BackgroundTransparency = 1
+    UserFrame.Parent = MainFrame
+    
+    -- Kullanıcı avatarı (yuvarlak)
+    local AvatarFrame = Instance.new("Frame")
+    AvatarFrame.Name = "AvatarFrame"
+    AvatarFrame.Size = UDim2.new(0, 50, 0, 50)
+    AvatarFrame.Position = UDim2.new(0, 0, 0, 10)
+    AvatarFrame.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+    AvatarFrame.BorderSizePixel = 0
+    
+    local AvatarCorner = Instance.new("UICorner")
+    AvatarCorner.CornerRadius = UDim.new(1, 0)
+    AvatarCorner.Parent = AvatarFrame
+    
+    local AvatarImage = Instance.new("ImageLabel")
+    AvatarImage.Name = "AvatarImage"
+    AvatarImage.Size = UDim2.new(1, -10, 1, -10)
+    AvatarImage.Position = UDim2.new(0, 5, 0, 5)
+    AvatarImage.BackgroundTransparency = 1
+    AvatarImage.Image = "https://www.roblox.com/headshot-thumbnail/image?userId="..Player.UserId.."&width=420&height=420&format=png"
+    AvatarImage.Parent = AvatarFrame
+    
+    AvatarFrame.Parent = UserFrame
+    
+    -- Kullanıcı bilgileri
+    local UsernameLabel = Instance.new("TextLabel")
+    UsernameLabel.Name = "UsernameLabel"
+    UsernameLabel.Size = UDim2.new(0, 200, 0, 20)
+    UsernameLabel.Position = UDim2.new(0, 60, 0, 15)
+    UsernameLabel.BackgroundTransparency = 1
+    UsernameLabel.Text = "Username: "..Player.Name
+    UsernameLabel.TextColor3 = Color3.new(1, 1, 1)
+    UsernameLabel.Font = Enum.Font.Gotham
+    UsernameLabel.TextSize = 16
+    UsernameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    UsernameLabel.Parent = UserFrame
+    
+    local UserIdLabel = Instance.new("TextLabel")
+    UserIdLabel.Name = "UserIdLabel"
+    UserIdLabel.Size = UDim2.new(0, 200, 0, 20)
+    UserIdLabel.Position = UDim2.new(0, 60, 0, 35)
+    UserIdLabel.BackgroundTransparency = 1
+    UserIdLabel.Text = "ID: "..Player.UserId
+    UserIdLabel.TextColor3 = Color3.new(1, 1, 1)
+    UserIdLabel.Font = Enum.Font.Gotham
+    UserIdLabel.TextSize = 14
+    UserIdLabel.TextXAlignment = Enum.TextXAlignment.Left
+    UserIdLabel.Parent = UserFrame
+    
+    -- Asset bilgileri bölümü
+    local AssetFrame = Instance.new("Frame")
+    AssetFrame.Name = "AssetFrame"
+    AssetFrame.Size = UDim2.new(1, -40, 0, 40)
+    AssetFrame.Position = UDim2.new(0, 20, 1, -45)
+    AssetFrame.BackgroundTransparency = 1
+    AssetFrame.Parent = MainFrame
+    
+    local AssetIdLabel = Instance.new("TextLabel")
+    AssetIdLabel.Name = "AssetIdLabel"
+    AssetIdLabel.Size = UDim2.new(0.5, -5, 0, 20)
+    AssetIdLabel.Position = UDim2.new(0, 0, 0, 0)
+    AssetIdLabel.BackgroundTransparency = 1
+    AssetIdLabel.Text = "Game ID: " .. game.PlaceId
+    AssetIdLabel.TextColor3 = Color3.new(1, 1, 1)
+    AssetIdLabel.Font = Enum.Font.Gotham
+    AssetIdLabel.TextSize = 14
+    AssetIdLabel.TextXAlignment = Enum.TextXAlignment.Left
+    AssetIdLabel.Parent = AssetFrame
+    
+    local AssetTypeLabel = Instance.new("TextLabel")
+    AssetTypeLabel.Name = "AssetTypeLabel"
+    AssetTypeLabel.Size = UDim2.new(0.5, -5, 0, 20)
+    AssetTypeLabel.Position = UDim2.new(0.5, 5, 0, 0)
+    AssetTypeLabel.BackgroundTransparency = 1
+    AssetTypeLabel.Text = "Type: Script"
+    AssetTypeLabel.TextColor3 = Color3.new(1, 1, 1)
+    AssetTypeLabel.Font = Enum.Font.Gotham
+    AssetTypeLabel.TextSize = 14
+    AssetTypeLabel.TextXAlignment = Enum.TextXAlignment.Left
+    AssetTypeLabel.Parent = AssetFrame
+    
+    local ExecutorLabel = Instance.new("TextLabel")
+    ExecutorLabel.Name = "ExecutorLabel"
+    ExecutorLabel.Size = UDim2.new(0.5, -5, 0, 20)
+    ExecutorLabel.Position = UDim2.new(0, 0, 0, 20)
+    ExecutorLabel.BackgroundTransparency = 1
+    ExecutorLabel.Text = "Executor: "..GetExecutorInfo()
+    ExecutorLabel.TextColor3 = Color3.new(1, 1, 1)
+    ExecutorLabel.Font = Enum.Font.Gotham
+    ExecutorLabel.TextSize = 14
+    ExecutorLabel.TextXAlignment = Enum.TextXAlignment.Left
+    ExecutorLabel.Parent = AssetFrame
+    
+    local AssetStatusLabel = Instance.new("TextLabel")
+    AssetStatusLabel.Name = "AssetStatusLabel"
+    AssetStatusLabel.Size = UDim2.new(0.5, -5, 0, 20)
+    AssetStatusLabel.Position = UDim2.new(0.5, 5, 0, 20)
+    AssetStatusLabel.BackgroundTransparency = 1
+    AssetStatusLabel.Text = "Status: Loading"
+    AssetStatusLabel.TextColor3 = Color3.new(1, 1, 1)
+    AssetStatusLabel.Font = Enum.Font.Gotham
+    AssetStatusLabel.TextSize = 14
+    AssetStatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+    AssetStatusLabel.Parent = AssetFrame
+    
+    -- İçerik frame'i (animasyon için)
+    local ContentFrame = Instance.new("Frame")
+    ContentFrame.Name = "ContentFrame"
+    ContentFrame.Size = UDim2.new(1, -40, 0, 80)
+    ContentFrame.Position = UDim2.new(0, 20, 0, 115)
+    ContentFrame.BackgroundTransparency = 1
+    ContentFrame.ClipsDescendants = true
+    ContentFrame.Parent = MainFrame
+    
+    -- Loading text
+    local LoadingText = Instance.new("TextLabel")
+    LoadingText.Name = "LoadingText"
+    LoadingText.Size = UDim2.new(1, 0, 0, 20)
+    LoadingText.Position = UDim2.new(0, 0, 0, 10)
+    LoadingText.BackgroundTransparency = 1
+    LoadingText.Text = "Initializing core components..."
+    LoadingText.TextColor3 = Color3.new(1, 1, 1)
+    LoadingText.Font = Enum.Font.Gotham
+    LoadingText.TextSize = 16
+    LoadingText.TextXAlignment = Enum.TextXAlignment.Left
+    LoadingText.Parent = ContentFrame
+    
+    -- Progress bar
+    local ProgressBar = Instance.new("Frame")
+    ProgressBar.Name = "ProgressBar"
+    ProgressBar.Size = UDim2.new(1, 0, 0, 6)
+    ProgressBar.Position = UDim2.new(0, 0, 0, 40)
+    ProgressBar.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+    ProgressBar.BorderSizePixel = 0
+    ProgressBar.Parent = ContentFrame
+    
+    local ProgressFill = Instance.new("Frame")
+    ProgressFill.Name = "ProgressFill"
+    ProgressFill.Size = UDim2.new(0, 0, 1, 0)
+    ProgressFill.BackgroundColor3 = Color3.new(0.2, 0.6, 1)
+    ProgressFill.BorderSizePixel = 0
+    ProgressFill.Parent = ProgressBar
+    
+    local ProgressCorner = Instance.new("UICorner")
+    ProgressCorner.CornerRadius = UDim.new(0, 3)
+    ProgressCorner.Parent = ProgressBar
+    
+    -- Timer (ortalanmış)
+    local Timer = Instance.new("TextLabel")
+    Timer.Name = "Timer"
+    Timer.Size = UDim2.new(1, 0, 0, 20)
+    Timer.Position = UDim2.new(0, 0, 0, 60)
+    Timer.BackgroundTransparency = 1
+    Timer.Text = "Estimated time: 05:00"
+    Timer.TextColor3 = Color3.new(1, 1, 1)
+    Timer.Font = Enum.Font.Gotham
+    Timer.TextSize = 14
+    Timer.TextXAlignment = Enum.TextXAlignment.Center
+    Timer.Parent = ContentFrame
+    
+    -- Taşıma işlevselliği
+    local UserInputService = game:GetService("UserInputService")
+    
+    local dragging
+    local dragInput
+    local dragStart
+    local startPos
+    
+    local function update(input)
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+    
+    TitleBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = MainFrame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    TitleBar.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+    
+    -- Buton işlevleri
+    CloseButton.MouseButton1Click:Connect(function()
+        local tween = TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+            Size = UDim2.new(0, 0, 0, 0),
+            BackgroundTransparency = 1
+        })
+        tween:Play()
+        tween.Completed:Wait()
+        ScreenGui:Destroy()
+    end)
+    
+    local minimized = false
+    ToggleButton.MouseButton1Click:Connect(function()
+        minimized = not minimized
+
+        if minimized then
+            ToggleButton.Text = "+"
+            
+            -- Tüm içeriği gizle, sadece başlık çubuğunu göster
+            UserFrame.Visible = false
+            ContentFrame.Visible = false
+            AssetFrame.Visible = false
+            TopDivider.Visible = false
+            BottomDivider.Visible = false
+            
+            -- Ana frame boyutunu küçült
+            local frameTween = TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+                Size = UDim2.new(0, 500, 0, 30)
+            })
+            frameTween:Play()
+        else
+            ToggleButton.Text = "−"
+            
+            -- Tüm içeriği göster
+            UserFrame.Visible = true
+            ContentFrame.Visible = true
+            AssetFrame.Visible = true
+            TopDivider.Visible = true
+            BottomDivider.Visible = true
+            
+            -- Ana frame boyutunu büyüt
+            local frameTween = TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+                Size = UDim2.new(0, 500, 0, 250)
+            })
+            frameTween:Play()
+        end
+    end)
+        -- YENİ SÜRÜKLEME SİSTEMİ
+    local dragging
+    local dragInput
+    local dragStart
+    local startPos
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+
+    -- MainFrame için sürükleme başlangıcı
+    MainFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = MainFrame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    -- Butonlar için sürükleme engelleme
+    local function stopPropagation(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            input.StopPropagation()
+        end
+    end
+
+    CloseButton.InputBegan:Connect(stopPropagation)
+    ToggleButton.InputBegan:Connect(stopPropagation)
+
+    -- Sürükleme işlemi
+    MainFrame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+
+    -- Buton işlevleri (önceki kodunuzdaki gibi devam ediyor)
+    CloseButton.MouseButton1Click:Connect(function()
+        local tween = TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+            Size = UDim2.new(0, 0, 0, 0),
+            BackgroundTransparency = 1
+        })
+        tween:Play()
+        tween.Completed:Wait()
+        ScreenGui:Destroy()
+    end)
+
+    local minimized = false
+    ToggleButton.MouseButton1Click:Connect(function()
+        minimized = not minimized
+
+        if minimized then
+            ToggleButton.Text = "+"
+            UserFrame.Visible = false
+            ContentFrame.Visible = false
+            AssetFrame.Visible = false
+            TopDivider.Visible = false
+            BottomDivider.Visible = false
+            
+            local frameTween = TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+                Size = UDim2.new(0, 500, 0, 30)
+            })
+            frameTween:Play()
+        else
+            ToggleButton.Text = "−"
+            UserFrame.Visible = true
+            ContentFrame.Visible = true
+            AssetFrame.Visible = true
+            TopDivider.Visible = true
+            BottomDivider.Visible = true
+            
+            local frameTween = TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+                Size = UDim2.new(0, 500, 0, 250)
+            })
+            frameTween:Play()
+        end
+    end)
+
+    -- Açılış animasyonu
+    MainFrame.Size = UDim2.new(0, 0, 0, 0)
+    local openTween = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 500, 0, 250)
+    })
+    openTween:Play()
+    
+    -- Loading animasyonu
+    local startTime = tick()
+    local duration = 300 -- 5 dakika (300 saniye)
+    
+    local loadingTexts = {
+        "Initializing core components...",
+        "Loading asset bundles (12/47)...",
+        "Compiling shaders... 28% complete",
+        "Verifying data integrity...",
+        "Establishing secure connection...",
+        "Allocating memory resources...",
+        "Loading textures... 256/1024",
+        "Optimizing scene graph...",
+        "Validating user permissions...",
+        "Finalizing initialization sequence..."
+    }
+    
+    local function formatTime(seconds)
+        local mins = math.floor(seconds / 60)
+        local secs = math.floor(seconds % 60)
+        return string.format("%02d:%02d", mins, secs)
+    end
+    
+    local connection
+    connection = game:GetService("RunService").Heartbeat:Connect(function()
+        local elapsed = tick() - startTime
+        local remaining = math.max(0, duration - elapsed)
+        
+        if not minimized then
+            -- Progress bar
+            local progress = math.min(1, elapsed / duration)
+            ProgressFill.Size = UDim2.new(progress, 0, 1, 0)
+            
+            -- Timer text
+            Timer.Text = "Estimated time: " .. formatTime(remaining)
+            
+            -- Loading text değişimi
+            local textIndex = math.floor((elapsed * 2) % #loadingTexts) + 1
+            LoadingText.Text = loadingTexts[textIndex]
+            
+            -- Asset durum güncelleme
+            AssetStatusLabel.Text = "Status: "..math.floor(progress*100).."% loaded"
+        end
+        
+        if elapsed >= duration then
+            connection:Disconnect()
+            
+            -- Kapanış animasyonu
+            local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+                Size = UDim2.new(0, 0, 0, 0),
+                BackgroundTransparency = 1
+            })
+            closeTween:Play()
+            closeTween.Completed:Wait()
+            ScreenGui:Destroy()
+        end
+    end)
+    
+    return ScreenGui
+end
+
+-- GUI'yi oyuncuya ekle
+local FakeLoadingGui = CreateFakeLoadingGui()
+FakeLoadingGui.Parent = Player:WaitForChild("PlayerGui")
